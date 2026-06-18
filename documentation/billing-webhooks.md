@@ -1,6 +1,6 @@
 # Billing webhooks
 
-> How the payment provider's events drive billing state. System knowledge — keep it matching the code; run `/documentation` when handling changes.
+> How the payment provider's events drive billing state. System knowledge — keep it matching the code; run `well-actually-documentation-recent` when handling changes.
 
 Replace the placeholder description below with your real integration.
 
@@ -13,7 +13,7 @@ Replace the placeholder description below with your real integration.
 
 ## The non-obvious parts
 
-- **Signature first, always.** An unverified payload is discarded before parsing. The signing secret is environment-only — see `rules/security.md`.
+- **Signature first, always.** An unverified payload is discarded before parsing. The signing secret is environment-only — see `.claude/rules/security.md`.
 - **Retries are the norm, not the exception.** The provider re-sends on any non-`200`, on timeout, and sometimes on success. Every handler must be idempotent; the event-ID ledger is what makes that true.
 - **Out-of-order delivery.** A `payment.succeeded` can arrive after the `subscription.canceled` that followed it. Handlers reconcile against the provider's current object state rather than assuming event order.
 - **The `200` is a receipt, not a result.** Returning `200` means "received and stored," not "processed successfully." Processing failures are retried from the stored event, not by asking the provider to resend.

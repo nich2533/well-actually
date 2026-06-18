@@ -1,6 +1,15 @@
+---
+paths:
+  - "src/**/auth/**"
+  - "src/api/**"
+  - "**/*webhook*"
+  - "**/middleware/**"
+  - "**/*.env*"
+---
+
 # Security rules
 
-> Load this when handling secrets, user input, auth, or external requests.
+> Auto-loads only when you touch auth, an endpoint, a webhook, middleware, or env config — that's what the `paths:` globs above do. Security is cross-cutting, so scope these wider than other rules; a truly universal rule ("never log secrets") may belong in `CLAUDE.md` so it's always loaded.
 
 Replace the examples below with your project's real conventions. Keep this one honest — a stale security rule is worse than none.
 

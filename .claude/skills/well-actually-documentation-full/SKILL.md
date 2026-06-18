@@ -19,7 +19,7 @@ Use it once, up front (or as a reset). The day-to-day after that is `well-actual
 
 - It does not document everything. A doc earns its place by capturing what's *non-obvious* — a flow, an invariant, a gotcha. A file whose behavior is self-evident from its name doesn't get a doc. Exhaustive ≠ useful; the goal is a small set of high-value docs, not one per file.
 - It does not invent behavior. Each doc is grounded in code the subagent actually read. Where the code is unclear, the doc flags the gap rather than guessing.
-- It does not touch `rules/`. Standards belong in the rules tree; this skill writes only `documentation/` (how the system *is*).
+- It does not touch `.claude/rules/`. Standards belong in the rules tree; this skill writes only `documentation/` (how the system *is*).
 
 ## Workflow
 
@@ -41,11 +41,13 @@ Use it once, up front (or as a reset). The day-to-day after that is `well-actual
 
    Each subagent owns a distinct file, so the concurrent writes never collide.
 
-3. **Reconcile the set.** When the subagents return, verify every promised doc exists and follows the format. Check for overlap (two docs describing the same boundary — merge or cross-link), for standards that drifted in from `rules/` territory (move them out), and for subsystems that got missed.
+3. **Reconcile the set.** When the subagents return, verify every promised doc exists and follows the format. Check for overlap (two docs describing the same boundary — merge or cross-link), for standards that drifted in from `.claude/rules/` territory (move them out), and for subsystems that got missed.
 
 4. **Replace the placeholders.** If the repo still has the template's placeholder docs, the real docs supersede them — remove any placeholder that no longer maps to a real subsystem so the tree reflects the actual system.
 
-5. **Report.** List each doc written with its one-line summary, the subsystems deliberately left undocumented (and why — usually "self-evident"), anything flagged as too unclear to document, and the next step: from here on, run `well-actually-documentation-recent` to keep these current.
+5. **Establish the sync marker.** Write `HEAD`'s SHA to `documentation/.last-synced` (`git rev-parse HEAD`). This pass just brought the docs in line with the whole repo, so HEAD is the point everything is now synced to — and it's the baseline `well-actually-documentation-recent` diffs from next time. Without it, the recent pass has nothing to anchor on and will send the user back here. Commit it alongside the new docs.
+
+6. **Report.** List each doc written with its one-line summary, the subsystems deliberately left undocumented (and why — usually "self-evident"), anything flagged as too unclear to document, the sync marker you wrote, and the next step: from here on, run `well-actually-documentation-recent` to keep these current.
 
 ## Principle
 

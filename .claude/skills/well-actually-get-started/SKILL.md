@@ -1,11 +1,11 @@
 ---
 name: well-actually-get-started
-description: One-shot initial seeding for a project adopting the budget-not-backpack layout. Runs well-actually-create-rules (CLAUDE.md → rules/) and well-actually-documentation-full (code → documentation/) together, fanning out subagents so both trees seed in parallel. Use right after dropping this template into an existing codebase, or when rules/ and documentation/ are still placeholders. Trigger phrases include "get started", "seed the project", "initialize the docs and rules", or running well-actually-get-started.
+description: One-shot initial seeding for a project adopting the budget-not-backpack layout. Runs well-actually-create-rules (CLAUDE.md → .claude/rules/) and well-actually-documentation-full (code → documentation/) together, fanning out subagents so both trees seed in parallel. Use right after dropping this template into an existing codebase, or when .claude/rules/ and documentation/ are still placeholders. Trigger phrases include "get started", "seed the project", "initialize the docs and rules", or running well-actually-get-started.
 ---
 
-# well-actually-get-started — seed rules/ and documentation/ from an existing codebase
+# well-actually-get-started — seed .claude/rules/ and documentation/ from an existing codebase
 
-The template ships with placeholder rules and docs. This skill replaces them with the real thing in one pass: it decomposes your `CLAUDE.md` into `rules/` and reads your code into `documentation/` — at the same time, because the two halves don't depend on each other.
+The template ships with placeholder rules and docs. This skill replaces them with the real thing in one pass: it decomposes your `CLAUDE.md` into path-scoped `.claude/rules/` files and reads your code into `documentation/` — at the same time, because the two halves don't depend on each other.
 
 ## What this skill does
 
@@ -28,22 +28,22 @@ The template ships with placeholder rules and docs. This skill replaces them wit
 
 2. **Fan out both halves at once.** In a single message, dispatch two independent lines of work so they run concurrently:
 
-   - **Rules subagent(s).** Run the `well-actually-create-rules` workflow: gather CLAUDE.md + config, cluster into concerns, and — because that workflow itself fans out one subagent per concern — this branch expands into several parallel drafters. Each writes its own `rules/<concern>.md`.
+   - **Rules subagent(s).** Run the `well-actually-create-rules` workflow: gather CLAUDE.md + config, cluster into concerns, and — because that workflow itself fans out one subagent per concern — this branch expands into several parallel drafters. Each writes its own `.claude/rules/<concern>.md`, complete with the `paths:` frontmatter that makes it auto-load only on matching files.
    - **Docs subagent(s).** Run the `well-actually-documentation-full` workflow: survey the codebase, identify the subsystems, and write each `documentation/<subsystem>.md` from scratch. One subagent per subsystem, in parallel.
 
    Every subagent owns a distinct output file, so the concurrent writes never collide. Send all dispatches in one message — don't await one branch before starting the other.
 
-3. **Reconcile overlap.** When both halves return, check the seam between them: a standard that drifted into a doc ("we always validate at the boundary") belongs in `rules/security.md`; a piece of system behavior that landed in a rule ("the webhook retries on non-200") belongs in `documentation/billing-webhooks.md`. Move misfiled content to the correct tree. This is the one step that *must* happen after the barrier — it needs both halves' output.
+3. **Reconcile overlap.** When both halves return, check the seam between them: a standard that drifted into a doc ("we always validate at the boundary") belongs in `.claude/rules/security.md`; a piece of system behavior that landed in a rule ("the webhook retries on non-200") belongs in `documentation/billing-webhooks.md`. Move misfiled content to the correct tree. This is the one step that *must* happen after the barrier — it needs both halves' output.
 
-4. **Write the lean CLAUDE.md — the seed isn't done until this exists.** Seeding `rules/` and `documentation/` without slimming `CLAUDE.md` leaves you carrying the backpack *and* the budget. So produce the actual file, every run:
-   - Take the map the rules half drafted and confirm it also points at the freshly created `documentation/` docs.
+4. **Write the lean CLAUDE.md — the seed isn't done until this exists.** Seeding `.claude/rules/` and `documentation/` without slimming `CLAUDE.md` leaves you carrying the backpack *and* the budget. So produce the actual file, every run:
+   - Take the map the rules half drafted and confirm it also points at the freshly created `documentation/` docs. Remember the map does *not* list the `.claude/rules/` files individually — those auto-load by path; the map's job is the `documentation/` pointers and any universal standard.
    - **Write it to `CLAUDE.md.proposed`** next to the original — a real artifact, not a chat suggestion.
    - Show the user a diff of `CLAUDE.md` → `CLAUDE.md.proposed` and ask for approval.
    - **On approval, replace the original** (`CLAUDE.md.proposed` → `CLAUDE.md`) and remove the `.proposed` file. On decline, leave both for hand-editing.
    - Never overwrite `CLAUDE.md` in place without approval — but never finish the seed without having written the `.proposed` file.
 
 5. **Combined report.** One summary covering:
-   - `rules/` files created (with one-line summaries).
+   - `.claude/rules/` files created (with one-line summaries and their `paths:` globs).
    - `documentation/` files created (with one-line summaries).
    - Anything reconciled across the seam.
    - Anything flagged or skipped (ungrounded rules, subsystems too unclear to document, missing inputs).
@@ -55,4 +55,4 @@ Seeding is embarrassingly parallel: each rule file and each doc file is independ
 
 ## Principle
 
-This is a one-time accelerator, not the maintenance loop. Once both trees are seeded and the lean `CLAUDE.md` is in place, the steady state is small and incremental: edit the relevant `rules/` file by hand, and run `well-actually-documentation-recent` when code changes. Don't reach for `well-actually-get-started` again unless you're seeding a fresh project.
+This is a one-time accelerator, not the maintenance loop. Once both trees are seeded and the lean `CLAUDE.md` is in place, the steady state is small and incremental: edit the relevant `.claude/rules/` file by hand, and run `well-actually-documentation-recent` when code changes. Don't reach for `well-actually-get-started` again unless you're seeding a fresh project.

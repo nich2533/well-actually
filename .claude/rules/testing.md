@@ -1,6 +1,14 @@
+---
+paths:
+  - "**/*.test.*"
+  - "**/*.spec.*"
+  - "**/tests/**"
+  - "**/__tests__/**"
+---
+
 # Testing rules
 
-> Load this when writing or changing tests, or when "is this done?" comes up.
+> Auto-loads only when you touch a test file — that's what the `paths:` globs above do. Tune them to your test layout.
 
 Replace the examples below with your project's real conventions.
 
@@ -22,4 +30,4 @@ Replace the examples below with your project's real conventions.
 
 ## When in doubt
 
-If a change alters expected behavior, the docs describing that behavior need updating too — run `/documentation`.
+If a change alters expected behavior, the docs describing that behavior need updating too — run `well-actually-documentation-recent`.

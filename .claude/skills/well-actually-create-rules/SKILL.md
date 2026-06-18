@@ -1,18 +1,18 @@
 ---
 name: well-actually-create-rules
-description: Reads an existing CLAUDE.md (and other convention sources) and decomposes it into concern-scoped files under rules/. Use when migrating a monolithic CLAUDE.md to the budget-not-backpack layout, or seeding rules/ for the first time. Dispatches one subagent per concern so the files draft in parallel. Trigger phrases include "create rules", "split my CLAUDE.md", "infer rules from CLAUDE.md", or running well-actually-create-rules.
+description: Reads an existing CLAUDE.md (and other convention sources) and decomposes it into concern-scoped, path-scoped files under .claude/rules/ (each with a paths: glob so it auto-loads only when matching files are touched). Use when migrating a monolithic CLAUDE.md to the budget-not-backpack layout, or seeding .claude/rules/ for the first time. Dispatches one subagent per concern so the files draft in parallel. Trigger phrases include "create rules", "split my CLAUDE.md", "infer rules from CLAUDE.md", or running well-actually-create-rules.
 ---
 
-# well-actually-create-rules — turn a fat CLAUDE.md into a lean rules/ tree
+# well-actually-create-rules — turn a fat CLAUDE.md into a lean .claude/rules/ tree
 
-A monolithic `CLAUDE.md` is the backpack: every standard you've ever written, read on every task. This skill unpacks it — it reads the existing context, clusters the standards by concern, and emits one short `rules/<concern>.md` per concern, so each task pulls in only what it needs.
+A monolithic `CLAUDE.md` is the backpack: every standard you've ever written, read on every task. This skill unpacks it — it reads the existing context, clusters the standards by concern, and emits one short `.claude/rules/<concern>.md` per concern. Each file carries a `paths:` glob in its frontmatter, so Claude Code loads it automatically *only* when a matching file is touched. That's the mechanism that makes "load only what's relevant" real rather than a hint the model may or may not act on.
 
 ## What this skill does
 
 1. Gather the source conventions (CLAUDE.md and the obvious config-as-convention files).
 2. Cluster them into concerns — the natural seams (database, api, testing, security, style, …).
 3. Dispatch one subagent per concern, in parallel, to draft that concern's rule file.
-4. Write a slimmed `CLAUDE.md` — a map pointing at the new files instead of containing them — as a reviewable proposal file.
+4. Write a slimmed `CLAUDE.md` — a lean map — as a reviewable proposal file. Because path-scoped rules auto-load, the map does *not* re-list every rule file; it orients the project, points at `documentation/`, and holds only standards too universal to scope to a path.
 5. Report what was extracted, what was left behind, and what couldn't be sourced.
 
 ## What this skill does NOT do
@@ -23,29 +23,32 @@ A monolithic `CLAUDE.md` is the backpack: every standard you've ever written, re
 
 ## Workflow
 
-1. **Gather sources.** Read `CLAUDE.md` (the source of most rules). Then scan for convention-bearing config that should inform the rules rather than be restated: linter/formatter configs, `tsconfig`, CI files, `.editorconfig`, test config, any existing `rules/` or `CONTRIBUTING.md`. List what you found before going further. If there's no `CLAUDE.md` and no convention files, say so and stop — there's nothing to infer from.
+1. **Gather sources.** Read `CLAUDE.md` (the source of most rules). Then scan for convention-bearing config that should inform the rules rather than be restated: linter/formatter configs, `tsconfig`, CI files, `.editorconfig`, test config, any existing `.claude/rules/` or `CONTRIBUTING.md`. List what you found before going further. If there's no `CLAUDE.md` and no convention files, say so and stop — there's nothing to infer from.
 
 2. **Cluster into concerns.** Read the gathered material and group the standards by concern. Don't force a fixed list — let the seams emerge from the content. Common ones: `database`, `api-design`, `testing`, `security`, `style`, `git-workflow`, `accessibility`. Aim for 3–8 files; if you have one rule for a concern, fold it into the closest neighbor rather than spawning a one-line file. Produce an explicit concern → source-lines map and show it to the user.
+
+   As you cluster, also map each concern to **the file paths it governs** — that set becomes the concern's `paths:` glob (database → `**/*.sql`, `**/migrations/**`; api → `src/api/**`; tests → `**/*.test.*`). If a concern has no sensible path scope (a truly universal standard), note it — it belongs in `CLAUDE.md`, which always loads, not in a path-scoped rule that would never reliably fire.
 
    While clustering, watch for **sources that contradict each other** — a CLAUDE.md that disagrees with itself, or with a config or an existing rules file. Don't silently pick a winner. Surface the conflict to the user with both sides quoted and let them resolve it; a rule built on a guessed resolution is a rule that lies.
 
 3. **Dispatch subagents — one per concern, all in a single message so they run concurrently.** Give each subagent:
    - The concern name and the exact slices of source text that belong to it.
-   - The target path: `rules/<concern>.md`.
+   - The target path: `.claude/rules/<concern>.md`.
    - The house format every rule file follows (give it verbatim so the files come back consistent):
+     - **YAML frontmatter with a `paths:` glob list** naming the files this concern governs (e.g. `"**/*.sql"`, `"src/api/**"`). This is the load-bearing part: Claude Code auto-loads the rule *only* when Claude touches a matching file. A rule file with **no** `paths:` block loads on every session — the backpack this skill exists to prevent. Every emitted file gets a `paths:` block; if the concern has no sensible glob, don't invent one — flag it for `CLAUDE.md` instead and don't write the file.
      - An H1 title.
-     - A `> Load this when …` one-liner naming the task that should pull the file in.
+     - A one-line `>` note restating in plain English when the rule auto-loads (which paths trigger it), and pointing the reader at `documentation/` for how the system actually behaves.
      - Short, single-concern sections. Behavior, not prose. Each rule earns its place by preventing a specific mistake.
      - A closing `## When in doubt` line.
-   - The instruction to **write the file directly** at `rules/<concern>.md` and return a one-line summary of what it captured plus anything in its slice it deliberately dropped.
+   - The instruction to **write the file directly** at `.claude/rules/<concern>.md` and return a one-line summary of what it captured, its `paths:` globs, plus anything in its slice it deliberately dropped.
    - A scope fence: stay within the provided slices; if the slice implies a rule but doesn't state it, flag it in the return rather than inventing it.
 
    Each subagent owns a distinct file, so parallel writes don't collide.
 
-4. **Collect and sanity-check.** Once the subagents return, verify every promised file exists and follows the format. Re-read each briefly for contradictions across files (two rules disagreeing) and for anything that's actually system knowledge masquerading as a rule — flag those for the `documentation/` tree (`well-actually-documentation-full`) instead of keeping them here.
+4. **Collect and sanity-check.** Once the subagents return, verify every promised file exists, has a valid `paths:` frontmatter block, and follows the format. Re-read each briefly for contradictions across files (two rules disagreeing) and for anything that's actually system knowledge masquerading as a rule — flag those for the `documentation/` tree (`well-actually-documentation-full`) instead of keeping them here.
 
 5. **Write the lean CLAUDE.md — don't just describe it.** This step is the whole point of the skill; do not skip it or leave it as prose. Produce the actual slimmed file:
-   - Draft the replacement: a map — the project's one-paragraph orientation, then a "where things are" list pointing at each new `rules/<concern>.md` (and the `documentation/` tree if it exists), and nothing that now lives in those files.
+   - Draft the replacement: a lean map — the project's one-paragraph orientation; a short note that standards live in `.claude/rules/` and auto-load by path (so they are deliberately *not* listed one by one here); a "where things are" pointer to the `documentation/` tree if it exists; and any genuinely universal standard that had no sensible `paths:` glob. Nothing that now lives in a path-scoped rule.
    - **Write it to `CLAUDE.md.proposed`** next to the original. This is a real artifact the user can open, not a suggestion in the chat.
    - Show the user a diff of `CLAUDE.md` → `CLAUDE.md.proposed` (what's leaving, what's becoming a pointer) and ask for approval.
    - **On approval, replace the original** (`CLAUDE.md.proposed` → `CLAUDE.md`) and delete the `.proposed` file. If the user declines, leave both files in place so they can edit the proposal by hand.

@@ -1,6 +1,6 @@
 # Ingestion pipeline
 
-> How external data enters the system and becomes queryable. System knowledge — keep it matching the code; run `/documentation` when a stage changes.
+> How external data enters the system and becomes queryable. System knowledge — keep it matching the code; run `well-actually-documentation-recent` when a stage changes.
 
 Replace the placeholder description below with your real pipeline.
 

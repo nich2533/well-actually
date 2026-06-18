@@ -1,6 +1,14 @@
+---
+paths:
+  - "**/migrations/**"
+  - "**/*.sql"
+  - "src/db/**"
+  - "src/**/models/**"
+---
+
 # Database rules
 
-> Load this when a change touches the schema, a migration, or a query.
+> Auto-loads only when you touch a migration, a model, or SQL — that's what the `paths:` globs above do. Tune them to your layout. (For how the data actually flows, see `documentation/`, not here.)
 
 Replace the examples below with your project's real conventions. Keep it to the rules that have actually bitten you — a rules file earns its place by preventing a specific mistake, not by being thorough.
 
@@ -22,4 +30,4 @@ Replace the examples below with your project's real conventions. Keep it to the 
 
 ## When in doubt
 
-If a change affects how data is written or migrated, note it — and run `/documentation` so `documentation/` reflects the new shape.
+If a change affects how data is written or migrated, run `well-actually-documentation-recent` so `documentation/` reflects the new shape.

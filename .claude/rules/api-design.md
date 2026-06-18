@@ -1,6 +1,14 @@
+---
+paths:
+  - "src/api/**"
+  - "src/**/routes/**"
+  - "src/**/handlers/**"
+  - "src/**/controllers/**"
+---
+
 # API design rules
 
-> Load this when adding or changing an endpoint.
+> Auto-loads only when you touch an endpoint, route, or handler — that's what the `paths:` globs above do. Tune them to your layout.
 
 Replace the examples below with your project's real conventions. Short beats complete.
 
@@ -26,4 +34,4 @@ Replace the examples below with your project's real conventions. Short beats com
 
 ## When in doubt
 
-If an endpoint's behavior or contract changes, run `/documentation` so the system docs stay accurate.
+If an endpoint's behavior or contract changes, run `well-actually-documentation-recent` so the system docs stay accurate.

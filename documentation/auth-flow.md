@@ -1,6 +1,6 @@
 # Auth flow
 
-> How a request becomes an authenticated, authorized caller. This is system knowledge — *what is*, not *what should be*. Keep it matching the code; run `/documentation` when the flow changes.
+> How a request becomes an authenticated, authorized caller. This is system knowledge — *what is*, not *what should be*. Keep it matching the code; run `well-actually-documentation-recent` when the flow changes.
 
 Replace the placeholder description below with your real flow.
 
